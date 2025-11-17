@@ -234,4 +234,3 @@ public class TokoFrame extends JFrame {
         frame.setVisible(true);
     }
 }
-
