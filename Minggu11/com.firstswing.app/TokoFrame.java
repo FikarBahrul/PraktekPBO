@@ -1,3 +1,6 @@
+import java.io.FileWriter;
+import java.io.IOException;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -8,29 +11,41 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
-import javax.swing.JTable;
+import javax.swing.JTable; //  import toggle button
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 
 public class TokoFrame extends JFrame {
+
     JPanel inputPanel;
     JLabel namaProdukLabel;
     JTextField namaProdukField;
     JLabel hargaProdukLabel;
     JTextField hargaProdukField;
-    String[] columnNames = {"Nama Produk", "Harga"};
+
+    // kolom tabel baru
+    String[] columnNames = {"Nama Produk", "Harga", "Promo", "Stok"};
     DefaultTableModel produkTableModel;
     JTable produkTable;
     JScrollPane scrollPane;
+
     JButton simpanButton;
 
-    // 5 komponen baru (berbeda jenis)
-    JComboBox<String> kategoriCombo; // (1) dropdown
-    JCheckBox tersediaCheck;         // (2) checkbox
-    JRadioButton promoRadio;         // (3) radio button
-    JSpinner stokSpinner;            // (4) spinner (angka)
-    JButton resetButton;             // (5) tombol tambahan
+    // 5 komponen baru
+    JComboBox<String> kategoriCombo;
+    JCheckBox tersediaCheck;
+    JRadioButton promoRadio;
+    JSpinner stokSpinner;
+    JButton resetButton;
+
+    //  KOMPUTEN BARU YANG DIMINTA
+    JRadioButton noPromoRadio;
+    ButtonGroup promoGroup;
+
+    //  Toggle Button baru
+    JToggleButton eksporToggle;
 
     public TokoFrame() {
         setTitle("Toko Application");
@@ -50,15 +65,17 @@ public class TokoFrame extends JFrame {
         inputPanel.setLayout(null);
         add(inputPanel);
 
-        namaProdukLabel = new JLabel("Nama Produk: ");
-        inputPanel.add(namaProdukLabel);
+        // Nama produk
+        namaProdukLabel = new JLabel("Nama Produk:");
         namaProdukLabel.setBounds(10, 10, 100, 25);
+        inputPanel.add(namaProdukLabel);
 
         namaProdukField = new JTextField();
         namaProdukField.setBounds(120, 10, 200, 25);
         inputPanel.add(namaProdukField);
 
-        hargaProdukLabel = new JLabel("Harga: ");
+        // Harga
+        hargaProdukLabel = new JLabel("Harga:");
         hargaProdukLabel.setBounds(10, 50, 100, 25);
         inputPanel.add(hargaProdukLabel);
 
@@ -86,19 +103,34 @@ public class TokoFrame extends JFrame {
         promoRadio.setBounds(120, 150, 200, 25);
         inputPanel.add(promoRadio);
 
+        //  RADIO BUTTON BARU: Tidak Ada Promo
+        noPromoRadio = new JRadioButton("Tidak Ada Promo");
+        noPromoRadio.setBounds(120, 175, 200, 25);
+        inputPanel.add(noPromoRadio);
+
+        // ButtonGroup agar hanya satu radio dapat dipilih
+        promoGroup = new ButtonGroup();
+        promoGroup.add(promoRadio);
+        promoGroup.add(noPromoRadio);
+
         // (4) JSpinner - untuk jumlah stok
         JLabel stokLabel = new JLabel("Stok:");
-        stokLabel.setBounds(10, 180, 100, 25);
+        stokLabel.setBounds(10, 210, 100, 25);
         inputPanel.add(stokLabel);
 
         stokSpinner = new JSpinner();
-        stokSpinner.setBounds(120, 180, 100, 25);
+        stokSpinner.setBounds(120, 210, 100, 25);
         inputPanel.add(stokSpinner);
 
         // (5) JButton tambahan - tombol reset
         resetButton = new JButton("Reset");
-        resetButton.setBounds(120, 210, 100, 25);
+        resetButton.setBounds(120, 240, 100, 25);
         inputPanel.add(resetButton);
+
+        // (6) JToggleButton baru: contoh toggle untuk fitur ekspor CSV
+        eksporToggle = new JToggleButton("Mode Ekspor OFF");
+        eksporToggle.setBounds(120, 270, 200, 25);
+        inputPanel.add(eksporToggle);
 
         // untuk tabel
         produkTableModel = new DefaultTableModel(columnNames, 0);
@@ -109,7 +141,7 @@ public class TokoFrame extends JFrame {
 
         // untuk tombol simpan
         simpanButton = new JButton("Simpan");
-        simpanButton.setBounds(10, 240, 100, 25);
+        simpanButton.setBounds(10, 305, 100, 25);
         inputPanel.add(simpanButton);
     }
 
@@ -117,21 +149,32 @@ public class TokoFrame extends JFrame {
         simpanButton.addActionListener(e -> {
             String namaProduk = namaProdukField.getText();
             String hargaProduk = hargaProdukField.getText();
-            String kategori = (String) kategoriCombo.getSelectedItem();
-            boolean tersedia = tersediaCheck.isSelected();
-            boolean promo = promoRadio.isSelected();
+
+            String promoStatus =
+                    promoRadio.isSelected() ? "ada" :
+                    noPromoRadio.isSelected() ? "tidak ada" :
+                    "tidak dipilih";
+
             int stok = (Integer) stokSpinner.getValue();
 
-            produkTableModel.addRow(new Object[]{namaProduk, hargaProduk});
+            produkTableModel.addRow(new Object[]{
+                    namaProduk,
+                    hargaProduk,
+                    promoStatus,
+                    stok
+            });
 
             JOptionPane.showMessageDialog(this,
-                "Data disimpan:\n" +
-                "Nama Produk: " + namaProduk +
-                "\nHarga: " + hargaProduk +
-                "\nKategori: " + kategori +
-                "\nTersedia: " + (tersedia ? "Ya" : "Tidak") +
-                "\nPromo: " + (promo ? "Aktif" : "Tidak") +
-                "\nStok: " + stok);
+                    "Data disimpan:\n" +
+                            "Nama Produk: " + namaProduk +
+                            "\nHarga: " + hargaProduk +
+                            "\nPromo: " + promoStatus +
+                            "\nStok: " + stok);
+
+            // ekspor otomatis jika toggle ON
+            if (eksporToggle.isSelected()) {
+                exportCSV(); // panggil fungsi ekspor
+            }
         });
 
         // Event tombol reset
@@ -140,15 +183,53 @@ public class TokoFrame extends JFrame {
             hargaProdukField.setText("");
             kategoriCombo.setSelectedIndex(0);
             tersediaCheck.setSelected(false);
-            promoRadio.setSelected(false);
+            promoGroup.clearSelection();
             stokSpinner.setValue(0);
+
+            produkTableModel.setRowCount(0);
         });
+
+        //  Event Toggle Button untuk mengganti teks saat ditekan
+        eksporToggle.addActionListener(e -> {
+            if (eksporToggle.isSelected()) {
+                eksporToggle.setText("Mode Ekspor ON");
+            } else {
+                eksporToggle.setText("Mode Ekspor OFF");
+            }
+        });
+    }
+
+    // Fungsi ekspor CSV
+    void exportCSV() {
+        try (FileWriter writer = new FileWriter("D:\\Kuliah\\Semester 3\\Praktikum Pemrograman Berorientasi Objek\\PraktekPBO\\PraktekPBO\\Minggu11\\com.firstswing.app\\produk.csv")) {
+            // header
+            for (int i = 0; i < produkTableModel.getColumnCount(); i++) {
+                writer.append(produkTableModel.getColumnName(i));
+                if (i != produkTableModel.getColumnCount() - 1) writer.append(",");
+            }
+            writer.append("\n");
+
+            // data
+            for (int i = 0; i < produkTableModel.getRowCount(); i++) {
+                for (int j = 0; j < produkTableModel.getColumnCount(); j++) {
+                    writer.append(String.valueOf(produkTableModel.getValueAt(i, j)));
+                    if (j != produkTableModel.getColumnCount() - 1) writer.append(",");
+                }
+                writer.append("\n");
+            }
+
+            writer.flush();
+            JOptionPane.showMessageDialog(this, "Data berhasil diekspor ke produk.csv!");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Gagal ekspor CSV: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
+
         TokoFrame frame = new TokoFrame();
         frame.setVisible(true);
     }
